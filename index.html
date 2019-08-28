@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PageTable Index Page</title>
+    <style>
+        a:link {
+            font-size: 24px;
+            color: #0023FF;
+            text-decoration: none;
+        }
+
+        a:visited {
+            font-size: 24px;
+            color: #0023FF;
+        }
+
+        body {
+            text-align: center;
+        }
+
+        table {
+            border-collapse: collapse;
+            color: #FF8D04;
+            text-align: center;
+            margin: 0 auto;
+            font-size: 21px;
+            border: 1px solid #3F9F00;
+        }
+
+        th {
+            border: 1px solid #3F9F00;
+        }
+    </style>
+</head>
+<body>
+<div id="newsdiv">
+    <p>添加标题</p><input type="text" name="caption"/>
+    <br/>
+    <p>添加内容</p><textarea name="newsdesc" rows="4" cols="40"></textarea>
+    <br/>
+</div>
+<H4>选择用户</H4>
+<table id="pttable" width="50%"></table>
+<input type="button" onclick="Save()" style="margin-top:12px;height:34px;width:68px;" value="保存"/>&nbsp;<a href='javascript:void(0);' onclick="refresh()">重置</a>
+<H2>分页数据结构</H2>
+<div id="ShowJsonData" style="font-size: 26px;height:500px;border:4px solid #FF8D04;"></div>
+<H2>完整JSON</H2>
+<div id="PostJsonData" style="font-size: 23px;border:4px solid #FF8D04;"></div>
+
+<script type="text/javascript" src="src/jquery.min.js"></script>
+<script type="text/javascript" src="src/PageTable.js"></script>
+<script type="text/javascript" src="src/PageSave.js"></script>
+<script type="text/javascript">
+    var Data =
+        [{
+            "userid": 1,
+            "username": "TKaxv_7S",
+        }, {
+            "userid": 33,
+            "username": "Spring",
+        }, {
+            "userid": 38,
+            "username": "SpringMVC",
+        }, {
+            "userid": 19,
+            "username": "Hibernate",
+        }, {
+            "userid": 36,
+            "username": "Shiro",
+        }, {
+            "userid": 29,
+            "username": "admin",
+        }, {
+            "userid": 25,
+            "username": "张三",
+        }, {
+            "userid": 32,
+            "username": "李四",
+        }, {
+            "userid": 34,
+            "username": "达到",
+        }, {
+            "userid": 21,
+            "username": "阿倒萨",
+        }, {
+            "userid": 22,
+            "username": "王武",
+        }, {
+            "userid": 27,
+            "username": "甲",
+        }, {
+            "userid": 37,
+            "username": "阿斯蒂芬",
+        }, {
+            "userid": 24,
+            "username": "乙",
+        }, {
+            "userid": 28,
+            "username": "丙",
+        }, {
+            "userid": 23,
+            "username": "周树人",
+        }, {
+            "userid": 18,
+            "username": "丁",
+        }, {
+            "userid": 17,
+            "username": "孔乙己",
+        }, {
+            "userid": 30,
+            "username": "陈独秀",
+        }, {
+            "userid": 31,
+            "username": "李大钊",
+        }, {
+            "userid": 31,
+            "username": "还有一条",
+        }, {
+            "userid": 31,
+            "username": "最后一条",
+        }];
+
+    var pt;
+    $(function () {
+        var options = {
+            // url: "${Path}",
+            tableName: "#pttable",
+            pageSave: {
+                allCBox: "#chkall",
+                lineType: "tr",
+                checkType: "input:checkbox[name=userid]"
+            },
+            data: Data,
+            // sidePagination: "server",
+            /*queryFunc: function (params) {
+                return {Page: params.pageNumber};
+            },*/
+            columns: [
+                {title: "编号", field: "userid", width: '50px', align: 'left', valign: 'middle'},
+                {title: "账号", field: "username", width: '50px', align: 'left', valign: 'middle'},
+                {
+                    title: "全选", field: "userid", width: '50px', align: 'left', valign: 'middle', type: "checkbox",
+                    headFormat: function (title) {
+                        return title + '<input type="checkbox" id="chkall" style="width: 17px;height: 17px;">'
+                    },
+                    bodyFormat: function (data, x) {
+                        return '<input type="checkbox" name="userid" value="' + data + '" style="width: 20px;height: 20px" ' + (x ? 'checked' : '') + '/>';
+                    },
+                    footFormat: {}
+                }
+            ],
+            afterLoadSuccess: function (thisPageData,postData) {
+                ShowJData(postData);
+            }
+        };
+        pt = pageTable(options);
+    });
+
+    function makJson() {
+        var dataJson = {};
+        var List = pt.pageSave.getData();
+        dataJson.users = List;
+        dataJson.news = MarkJsonObj("#newsdiv", "input,textarea");
+        return dataJson;
+    }
+    function MarkJsonObj(OID, OTYP) {
+        var JObj = {};
+        $(OID).find(OTYP).each(function (i, dom) {
+            JObj[$(dom).attr('name')] = $(dom).val();
+        });
+        return JObj;
+    }
+
+    function ShowJData(data) {
+        $("#ShowJsonData").empty();
+        for(key in data){
+            var ShowJStr="<span>第"+key+"页</span><br/>";
+            $(data[key]).each(function (i, dom) {
+                var x = dom!=null?dom.userid+" "+dom.username:null;
+                ShowJStr+="<span style='float: left'>第"+(i+1)+"行："+x+"</span><br/>";
+            });
+            $("#ShowJsonData").append($("<div style='float: left;margin-left: 14px;'/>").append(ShowJStr));
+        }
+    }
+
+    function Save() {
+        ShowJData(pt.pageSave.setData());
+        $("#PostJsonData").html(JSON.stringify(makJson()));
+    }
+
+    //全部重置
+    function refresh() {
+        $("#chkall").prop("checked", false);
+        $("#userlist input[type='checkbox']").prop("checked", false);
+        //重置
+        pt.pageSave.refresh();
+        pt.initClient(1);
+        $("#ShowJsonData,#PostJsonData").empty();
+        $("[name='caption'],[name='newsdesc']").val("");
+    }
+</script>
+</body>
+</html>
